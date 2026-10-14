@@ -5,7 +5,7 @@ export const APP_NAME = import.meta.env.VITE_APP_NAME ?? "Rockranger";
 export const APP_TAGLINE =
   import.meta.env.VITE_APP_TAGLINE ?? "Self-hosted music streaming. Zero ads.";
 export const GITHUB_URL =
-  import.meta.env.VITE_GITHUB_URL ?? "https://github.com/mohankumaronly81";
+  import.meta.env.VITE_GITHUB_URL ?? "https://github.com/mohankumaronly/Music-Player";
 
 export const STORAGE_KEYS = {
   THEME: "theme",
