@@ -112,7 +112,7 @@ export function TopBar() {
                   <span className="grid h-6 w-6 place-items-center rounded-full btn-gradient">
                     <ShieldCheck className="h-3.5 w-3.5 text-white" />
                   </span>
-                  <span className="hidden sm:inline max-w-[10rem] truncate text-xs font-medium">
+                  <span className="hidden sm:inline max-w-40 truncate text-xs font-medium">
                     {email ?? "Admin"}
                   </span>
                 </button>
