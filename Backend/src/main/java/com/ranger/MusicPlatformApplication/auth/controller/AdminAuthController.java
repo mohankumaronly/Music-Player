@@ -14,9 +14,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/v1/auth/admin")
 @Tag(name = "Authentication", description = "Administrator OTP authentication and session management")
@@ -73,23 +70,5 @@ public class AdminAuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, authService.createLogoutCookie().toString())
                 .body(response);
-    }
-
-    @GetMapping("/health")
-    @Operation(summary = "Check administrator authentication service health")
-    public ResponseEntity<ApiResponse<Map<String, String>>> health(
-            HttpServletRequest httpRequest) {
-
-        Map<String, String> data = new HashMap<>();
-        data.put("status", "ok");
-        data.put("service", "UP");
-
-        ApiResponse<Map<String, String>> response = ApiResponse.success(
-                "Administrator authentication service is running",
-                data,
-                httpRequest.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
     }
 }

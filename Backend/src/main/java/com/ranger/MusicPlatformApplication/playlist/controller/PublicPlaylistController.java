@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -56,5 +58,23 @@ public class PublicPlaylistController {
 
         PageResponse<PlaylistSongItemResponse> page = PageResponse.from(playlistService.getPublicPlaylistSongs(id, pageable));
         return ResponseEntity.ok(ApiResponse.success("Playlist songs retrieved successfully", page, httpRequest.getRequestURI()));
+    }
+
+    @GetMapping("/health")
+    @Operation(summary = "Check administrator authentication service health")
+    public ResponseEntity<ApiResponse<Map<String, String>>> health(
+            HttpServletRequest httpRequest) {
+
+        Map<String, String> data = new HashMap<>();
+        data.put("status", "ok");
+        data.put("service", "UP");
+
+        ApiResponse<Map<String, String>> response = ApiResponse.success(
+                "Administrator authentication service is running",
+                data,
+                httpRequest.getRequestURI()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
