@@ -1,0 +1,817 @@
+{
+  "info": {
+    "_postman_id": "d1e8f7a2-3b4c-4d5e-9f01-2a3b4c5d6e7f",
+    "name": "Music Platform API",
+    "description": "Music Platform API — URLs use only raw form to avoid double-scheme issues.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "localhost:8080" },
+    { "key": "adminEmail", "value": "mohankumaronly81@gmail.com" },
+    { "key": "challengeId", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "songId", "value": "" },
+    { "key": "playlistId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Administrator Authentication",
+      "item": [
+        {
+          "name": "1.1 Request OTP (Configured Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Response indicates eligible request and returns challengeId\", function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property(\"challengeId\");",
+                  "    pm.collectionVariables.set(\"challengeId\", jsonData.data.challengeId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/auth/admin/request-otp"
+          }
+        },
+        {
+          "name": "1.2 Request OTP (Unknown Email)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"unauthorized-user@example.com\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/auth/admin/request-otp"
+          }
+        },
+        {
+          "name": "1.3 Verify OTP and Receive JWT + Cookie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Admin auth successful and accessToken captured\", function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.role).to.eql(\"ADMIN\");",
+                  "    pm.expect(jsonData.data).to.have.property(\"accessToken\");",
+                  "    pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"{{challengeId}}\",\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/auth/admin/verify-otp"
+          }
+        },
+        {
+          "name": "1.4 Logout Administrator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/auth/admin/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Song Management (Admin)",
+      "item": [
+        {
+          "name": "2.1 Upload Song",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Song created in DRAFT and songId saved\", function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql(\"DRAFT\");",
+                  "    pm.collectionVariables.set(\"songId\", jsonData.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Midnight Drive", "type": "text" },
+                { "key": "description", "value": "Relaxing synthwave track", "type": "text" },
+                { "key": "artistName", "value": "Neon Horizon", "type": "text" },
+                { "key": "albumName", "value": "Night Sessions", "type": "text" },
+                { "key": "genre", "value": "Synthwave", "type": "text" },
+                { "key": "audio", "type": "file", "src": "" },
+                { "key": "cover", "type": "file", "src": "" }
+              ]
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/songs"
+          }
+        },
+        {
+          "name": "2.2 List All Songs (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/songs?page=0&size=20"
+          }
+        },
+        {
+          "name": "2.3 Get Song by ID (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/songs/{{songId}}"
+          }
+        },
+        {
+          "name": "2.4 Update Song Metadata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Midnight Drive - Remastered\",\n  \"description\": \"Updated\",\n  \"artistName\": \"Neon Horizon\",\n  \"albumName\": \"Night Sessions Deluxe\",\n  \"genre\": \"Synthwave\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/songs/{{songId}}"
+          }
+        },
+        {
+          "name": "2.5 Publish Song",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 and PUBLISHED\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.status).to.eql(\"PUBLISHED\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/songs/{{songId}}/status"
+          }
+        },
+        {
+          "name": "2.6 Unpublish Song",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"UNPUBLISHED\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/songs/{{songId}}/status"
+          }
+        },
+        {
+          "name": "2.7 Delete Song",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/songs/{{songId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Public Music Streaming",
+      "item": [
+        {
+          "name": "3.1 List Published Songs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/songs?page=0&size=20&sort=createdAt,desc"
+          }
+        },
+        {
+          "name": "3.2 Get Published Song by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/songs/{{songId}}"
+          }
+        },
+        {
+          "name": "3.3 Search Published Songs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/songs/search?q=Midnight&page=0&size=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Playlist Management (Admin)",
+      "item": [
+        {
+          "name": "4.1 Create Playlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Playlist created and playlistId stored\", function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.collectionVariables.set(\"playlistId\", jsonData.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Late Night Chill Vibes\",\n  \"description\": \"Curated ad-free tracks\",\n  \"isPublic\": true\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists"
+          }
+        },
+        {
+          "name": "4.2 Add Song to Playlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"songId\": \"{{songId}}\",\n  \"position\": 0\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists/{{playlistId}}/songs"
+          }
+        },
+        {
+          "name": "4.3 Reorder Playlist Songs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"songIds\": [\n    \"{{songId}}\"\n  ]\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists/{{playlistId}}/songs/reorder"
+          }
+        },
+        {
+          "name": "4.4 Remove Song from Playlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists/{{playlistId}}/songs/{{songId}}"
+          }
+        },
+        {
+          "name": "4.5 Update Playlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Night Sessions Vol. 1\",\n  \"description\": \"Updated\",\n  \"isPublic\": true\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists/{{playlistId}}"
+          }
+        },
+        {
+          "name": "4.6 Delete Playlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/playlists/{{playlistId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Public Playlists",
+      "item": [
+        {
+          "name": "5.1 List Public Playlists",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/playlists?page=0&size=20"
+          }
+        },
+        {
+          "name": "5.2 Get Public Playlist by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/playlists/{{playlistId}}"
+          }
+        },
+        {
+          "name": "5.3 Fetch Playlist Songs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/playlists/{{playlistId}}/songs?page=0&size=20"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Negative Security & Error Tests",
+      "item": [
+        {
+          "name": "6.1 Verify Incorrect OTP (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"{{challengeId}}\",\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": "http://{{baseUrl}}/api/v1/auth/admin/verify-otp"
+          }
+        },
+        {
+          "name": "6.2 Admin API Without Auth (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/songs"
+          }
+        },
+        {
+          "name": "6.3 Admin API With Corrupt Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "malformed.jwt.token.signature", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/admin/songs"
+          }
+        },
+        {
+          "name": "6.4 Get Nonexistent Song (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://{{baseUrl}}/api/v1/songs/00000000-0000-0000-0000-000000000000"
+          }
+        }
+      ]
+    }
+  ]
+}
