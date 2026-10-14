@@ -7,7 +7,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { Button } from "../../components/ui/Button";
 
 export function AdminDashboardPage() {
   const email = useAuthStore((s) => s.email);
