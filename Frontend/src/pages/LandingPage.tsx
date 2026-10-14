@@ -186,7 +186,7 @@ export function LandingPage() {
                 variant="gradient"
                 leftIcon={<PlayCircle className="h-5 w-5" />}
               >
-                Get started — Free
+                Get started Free
               </Button>
             </Link>
             <a href={GITHUB_URL} target="_blank" rel="noreferrer">
